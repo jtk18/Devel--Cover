@@ -49,7 +49,7 @@ sub AUTOLOAD {
             *$func = sub {
                 my $self   = shift;
                 my $digest = shift;
-                # print STDERR "file: $digest, condition: $c\n";
+                print STDERR "file: $digest, condition: $c\n";
                 for my $fval (values %{$self->{f}}) {
                     return $fval->{$c} if $fval->{digest} eq $digest;
                 }
@@ -106,14 +106,14 @@ sub set_subroutine {
     # for when there are multiple subroutines of the same name on the same
     # line (such subroutines generally being called BEGIN).
 
-    # print STDERR "set_subroutine start $file:$line $sub_name($scount) ",
-                 # Dumper $self->{f}{$file}{start};
+    print STDERR "set_subroutine start $file:$line $sub_name($scount) ",
+                 Dumper $self->{f}{$file}{start};
     $self->{additional} = 0;
     if ($self->reuse($file)) {
         # reusing a structure
         if (exists $self->{f}{$file}{start}{$line}{$sub_name}[$scount]) {
             # sub already exists - normal case
-            # print STDERR "reuse $file:$line:$sub_name\n";
+            print STDERR "reuse $file:$line:$sub_name\n";
             $self->{count}{$_}{$file} =
                 $self->{f}{$file}{start}{$line}{$sub_name}[$scount]{$_}
                 for $self->criteria;
@@ -122,14 +122,14 @@ sub set_subroutine {
             $self->{additional} = 1;
             if (exists $self->{additional_count}{($self->criteria)[0]}{$file}) {
                 # already had such a sub in module
-                # print STDERR "reuse additional $file:$line:$sub_name\n";
+                print STDERR "reuse additional $file:$line:$sub_name\n";
                 $self->{count}{$_}{$file} =
                     $self->{f}{$file}{start}{$line}{$sub_name}[$scount]{$_} =
                     ($self->add_count($_))[0]
                     for $self->criteria;
             } else {
                 # first such a sub in module
-                # print STDERR "reuse first $file:$line:$sub_name\n";
+                print STDERR "reuse first $file:$line:$sub_name\n";
                 $self->{count}{$_}{$file} =
                     $self->{additional_count}{$_}{$file} =
                     $self->{f}{$file}{start}{$line}{$sub_name}[$scount]{$_} =
@@ -139,14 +139,14 @@ sub set_subroutine {
         }
     } else {
         # first time sub seen in new structure
-        # print STDERR "new $file:$line:$sub_name\n";
+        print STDERR "new $file:$line:$sub_name\n";
         $self->{count}{$_}{$file} =
             $self->{f}{$file}{start}{$line}{$sub_name}[$scount]{$_} =
             $self->get_count($file, $_)
             for $self->criteria;
     }
-    # print STDERR "set_subroutine start $file:$line $sub_name($scount) ",
-                 # Dumper $self->{f}{$file}{start};
+    print STDERR "set_subroutine start $file:$line $sub_name($scount) ",
+                 Dumper $self->{f}{$file}{start};
 }
 
 sub store_counts {
@@ -156,7 +156,7 @@ sub store_counts {
         $self->{f}{$file}{start}{-1}{__COVER__}[0]{$_} =
         $self->get_count($file, $_)
         for $self->criteria;
-    # print STDERR "store_counts: ", Dumper $self->{f}{$file}{start};
+    print STDERR "store_counts: ", Dumper $self->{f}{$file}{start};
 }
 
 sub reuse {
@@ -172,7 +172,7 @@ sub set_file {
     $self->{file} = $file;
     my $digest = $self->digest($file);
     if ($digest) {
-        # print STDERR "Adding $digest for $file\n";
+        print STDERR "Adding $digest for $file\n";
         $self->{f}{$file}{digest} = $digest;
         push @{$self->{digests}{$digest}}, $file;
     }
@@ -183,7 +183,7 @@ sub digest {
     my $self = shift;
     my ($file) = @_;
 
-    # print STDERR "Opening $file for MD5 digest\n";
+    print STDERR "Opening $file for MD5 digest\n";
 
     my $digest;
     if (open my $fh, "<", $file) {
@@ -228,7 +228,7 @@ sub delete_file {
 sub write {
     my $self = shift;
     my ($dir) = @_;
-    # print STDERR Dumper $self;
+    print STDERR "in write\nSelf:" . Dumper $self;
     $dir .= "/structure";
     unless (mkdir $dir) {
         confess "Can't mkdir $dir: $!" unless -d $dir;
@@ -294,7 +294,7 @@ sub read {
         }
     }
     my $d = $self->digest($s->{file});
-    # print STDERR "reading $digest from $file: ", Dumper $s;
+    print STDERR "reading $digest from $file: ", Dumper $s;
     if (!$d) {
         # No digest implies that we can't read the file. Likely this is because
         # it's stored with a relative path. In which case, it's not valid to

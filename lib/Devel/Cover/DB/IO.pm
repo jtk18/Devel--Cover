@@ -15,7 +15,7 @@ use warnings;
 my $Format;
 
 BEGIN {
-    $Format = "Sereal"   if eval "use Sereal::Decoder; use Sereal::Encoder; 1";
+    #$Format = "Sereal"   if eval "use Sereal::Decoder; use Sereal::Encoder; 1";
     $Format = "JSON"     if !$Format and eval { require JSON::MaybeXS; 1 };
     $Format = "Storable" if !$Format and eval "use Storable; 1";
     die "Can't load either JSON or Storable" unless $Format;

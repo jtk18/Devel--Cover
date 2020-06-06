@@ -246,8 +246,7 @@ sub merge {
             for my $name (sort keys %{$self->{runs}}) {
                 # print STDERR "name $name\n";
                 my $run = $self->{runs}{$name};
-                # print STDERR
-                    # "digests for $file: $digest, $run->{digests}{$file}\n";
+                print STDERR "digests for $file: $digest, $run->{digests}{$file}\n";
                 if ($run->{digests}{$file} && $digest &&
                     $run->{digests}{$file} ne $digest) {
                     # File has changed.  Delete old coverage instead of merging.
@@ -442,11 +441,11 @@ sub add_statement {
     my ($cc, $sc, $fc, $uc) = @_;
     my %line;
     for my $i (0 .. $#$fc) {
-        # print STDERR "statement: $i\n";
+        print STDERR "statement: $i\n";
         my $l = $sc->[$i];
         unless (defined $l) {
-            # print STDERR "sc ", scalar @$sc, ", fc ", scalar @$fc, "\n";
-            # print STDERR "sc ", Dumper($sc), "fc ", Dumper($fc);
+            print STDERR "sc ", scalar @$sc, ", fc ", scalar @$fc, "\n";
+            print STDERR "sc ", Dumper($sc), "fc ", Dumper($fc);
             warn "Devel::Cover: ignoring extra statement\n";
             return;
         }
@@ -455,8 +454,8 @@ sub add_statement {
         $cc->{$l}[$n][0]  += $fc->[$i];
         $cc->{$l}[$n][1] ||= $uc->{$l}[$n][0][1];
     }
-    # print STDERR Dumper $uc;
-    # print STDERR "cc: ", Dumper $cc;
+    print STDERR Dumper $uc;
+    print STDERR "cc: ", Dumper $cc;
 }
 
 sub add_time {
@@ -466,8 +465,8 @@ sub add_time {
     for my $i (0 .. $#$fc) {
         my $l = $sc->[$i];
         unless (defined $l) {
-            # print STDERR "sc ", scalar @$sc, ", fc ", scalar @$fc, "\n";
-            # print STDERR "sc ", Dumper($sc), "fc ", Dumper($fc);
+            print STDERR "sc ", scalar @$sc, ", fc ", scalar @$fc, "\n";
+            print STDERR "sc ", Dumper($sc), "fc ", Dumper($fc);
             warn "Devel::Cover: ignoring extra statement\n";
             return;
         }
@@ -506,7 +505,7 @@ sub add_subroutine {
     my $self = shift;
     my ($cc, $sc, $fc, $uc) = @_;
 
-    # print STDERR "add_subroutine():\n", Dumper $cc, $sc, $fc, $uc;
+    print STDERR "add_subroutine() cc sc fc uc:\n", Dumper $cc, $sc, $fc, $uc;
 
     # $cc = { line_number => [ [ count, sub_name, uncoverable ], [ ... ] ], .. }
     # $sc = [ [ line_number, sub_name ], [ ... ] ]
@@ -518,8 +517,8 @@ sub add_subroutine {
     for my $i (0 .. $#$fc) {
         my $l = $sc->[$i][0];
         unless (defined $l) {
-            # print STDERR "sc ", scalar @$sc, ", fc ", scalar @$fc, "\n";
-            # print STDERR "sc ", Dumper($sc), "fc ", Dumper($fc);
+            print STDERR "sc ", scalar @$sc, ", fc ", scalar @$fc, "\n";
+            print STDERR "sc ", Dumper($sc), "fc ", Dumper($fc);
             warn "Devel::Cover: ignoring extra subroutine\n";
             return;
         }
@@ -591,8 +590,7 @@ sub uncoverable {
             my $c = $f->{$crit};
             for my $line (keys %$c) {
                 if (exists $dl{$line}) {
-                    # print STDERR
-                    # "Found uncoverable $file:$crit:$line -> $dl{$line}\n";
+                    print STDERR "Found uncoverable $file:$crit:$line -> $dl{$line}\n";
 
                     # Change key from the MD5 digest to the actual line number
                     $c->{$dl{$line}} = delete $c->{$line};
@@ -729,7 +727,7 @@ sub objectify_cover {
                         die "<$crit:$o>" unless ref $o;
                         bless $o, $class;
                         bless $o, $class . "_" . $o->type if $o->can("type");
-                        # print "blessed $crit, $o\n";
+                        print "blessed $crit, $o\n";
                     }
                 }
             }
@@ -781,7 +779,7 @@ sub objectify_cover {
                 # Work around a change in bleadperl from 12251 to 14899
                 my $func = $Devel::Cover::DB::AUTOLOAD || $::AUTOLOAD;
 
-                # print STDERR "autoloading <$func>\n";
+                print STDERR "autoloading <$func>\n";
                 (my $f = $func) =~ s/.*:://;
                 carp "Undefined subroutine $f called"
                     unless grep { $_ eq $f }
@@ -797,6 +795,8 @@ sub objectify_cover {
 
 sub cover {
     my $self = shift;
+
+    print STDERR "In Devel::Cover::DB::cover\n";
 
     return $self->{cover} if $self->{cover_valid};
 
@@ -814,7 +814,7 @@ sub cover {
                                         ||
                                      $b cmp $a
     } keys %{$self->{runs}};
-    # print STDERR "runs: ", Dumper \@runs
+    print STDERR "runs: ", Dumper \@runs;
 
     my %warned;
     for my $run (@runs) {
@@ -825,7 +825,7 @@ sub cover {
         @{$self->{collected}}{@{$r->{collected}}} = ();
         $st->add_criteria(@{$r->{collected}});
         my $count = $r->{count};
-        # print STDERR "run $run, count: ", Dumper $count;
+        print STDERR "run $run, count: ", Dumper $count;
         while (my ($file, $f) = each %$count) {
             my $digest = $r->{digests}{$file};
             unless ($digest) {
@@ -836,7 +836,7 @@ sub cover {
                             $file =~ q|/Devel/Cover[./]|);
                 next;
             }
-            # print STDERR "File: $file\n";
+            print STDERR "File: $file\n";
             print STDERR "Devel::Cover: merging data for $file ",
                          "into $digests{$digest}\n"
                 if !$files{$file}++ && $digests{$digest};
@@ -852,13 +852,13 @@ sub cover {
             }
             my $cf = $cover->{$digests{$digest} ||= $ff} ||= {};
 
-            # print STDERR "st ", Dumper($st),
-                         # "f  ", Dumper($f),
-                         # "uc ", Dumper($uncoverable->{$digest});
+            print STDERR "st ", Dumper($st),
+                         "f  ", Dumper($f),
+                         "uc ", Dumper($uncoverable->{$digest});
             while (my ($criterion, $fc) = each %$f) {
                 my $get = "get_$criterion";
                 my $sc  = $st->$get($digest);
-                # print STDERR "$criterion: ", Dumper $sc, $fc;
+                print STDERR "criterion: $criterion: ", Dumper $sc, $fc;
                 unless ($sc) {
                     print STDERR "Devel::Cover: Warning: can't locate ",
                                  "structure for $criterion in $file\n"
@@ -867,16 +867,16 @@ sub cover {
                 }
                 my $cc  = $cf->{$criterion} ||= {};
                 my $add = "add_$criterion";
-                # print STDERR "$add():\n", Dumper $cc, $sc, $fc;
+                print STDERR "$add() cc sc fc uc:\n", Dumper $cc, $sc, $fc, $uncoverable->{$digest}{$criterion};
                 $self->$add($cc, $sc, $fc, $uncoverable->{$digest}{$criterion});
-                # print STDERR "--> $add():\n", Dumper $cc;
+                print STDERR "--> $add():\n", Dumper $cc;
                 # $cc - coverage being filled in
                 # $sc - structure information
                 # $fc - coverage from this file
                 # $uc - uncoverable information
             }
         }
-        # print STDERR "Cover: ", Dumper $cover;
+        print STDERR "Cover: ", Dumper $cover;
     }
 
     $self->objectify_cover;
@@ -911,7 +911,7 @@ sub DESTROY {}
 
 sub AUTOLOAD {
     my $func = $AUTOLOAD;
-    # print STDERR "autoloading <$func>\n";
+    print STDERR "autoloading <$func>\n";
     (my $f = $func) =~ s/.*:://;
     no strict "refs";
     *$func = sub { shift->{$f} };

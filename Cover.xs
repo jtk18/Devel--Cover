@@ -16,6 +16,7 @@ extern "C" {
 #include "EXTERN.h"
 #include "perl.h"
 #include "XSUB.h"
+#include<stdio.h>
 
 #ifdef __cplusplus
 }
@@ -461,13 +462,19 @@ static void cover_statement(pTHX_ OP *op) {
     SV  **count;
     IV    c;
 
-    if (!collecting(Statement)) return;
+    if (!collecting(Statement)) {
+        fprintf(stderr, "Skipping Statement: %s:%ld\n", CopFILE(cCOPx(op)), (long)CopLINE(cCOPx(op)));
+        return;
+    } 
 
     ch    = get_key(op);
     count = hv_fetch(MY_CXT.statements, ch, KEY_SZ, 1);
     c     = SvTRUE(*count) ? SvIV(*count) + 1 : 1;
 
+    fprintf(stderr, "cover statement ch: %s count: %d c: %d\n", ch, count, c);
+
     NDEB(D(L, "Statement: %s:%ld\n", CopFILE(cCOPx(op)), (long)CopLINE(cCOPx(op))));
+    fprintf(stderr, "cover statement: Statement: %s:%ld\n", CopFILE(cCOPx(op)), (long)CopLINE(cCOPx(op)));
 
     sv_setiv(*count, c);
     NDEB(op_dump(op));
@@ -500,6 +507,7 @@ static void add_branch(pTHX_ OP *op, int br) {
     c     = SvTRUE(*count) ? SvIV(*count) + 1 : 1;
     sv_setiv(*count, c);
     NDEB(D(L, "Adding branch making %d at %p\n", c, op));
+    fprintf(stderr, "Adding branch (%d) making %d at %p\n", br, c, op);
 }
 
 static AV *get_conditional_array(pTHX_ OP *op) {
@@ -531,6 +539,7 @@ static void set_conditional(pTHX_ OP *op, int cond, int value) {
     SV **count = av_fetch(get_conditional_array(aTHX_ op), cond, 1);
     sv_setiv(*count, value);
     NDEB(D(L, "Setting %d conditional to %d at %p\n", cond, value, op));
+    fprintf(stderr, "Setting %d conditional to %d at %p\n", cond, value, op);
 }
 
 static void add_conditional(pTHX_ OP *op, int cond) {
@@ -538,6 +547,7 @@ static void add_conditional(pTHX_ OP *op, int cond) {
     int  c     = SvTRUE(*count) ? SvIV(*count) + 1 : 1;
     sv_setiv(*count, c);
     NDEB(D(L, "Adding %d conditional making %d at %p\n", cond, c, op));
+    fprintf(stderr, "Adding %d conditional making %d at %p\n", cond, c, op);
 }
 
 #ifdef USE_ITHREADS
@@ -1521,11 +1531,16 @@ coverage(final)
         dMY_CXT;
     CODE:
         NDEB(D(L, "Getting coverage %d\n", final));
+        fprintf(stderr, "Getting coverage %d\n", final);
         if (final) finalise_conditions(aTHX);
-        if (MY_CXT.cover)
+        if (MY_CXT.cover) {
+            fprintf(stderr, "Had cover\n");
             RETVAL = newRV_inc((SV*) MY_CXT.cover);
-        else
+        }
+        else {
+            fprintf(stderr, "Making PL_sv_undef");
             RETVAL = &PL_sv_undef;
+        }
     OUTPUT:
         RETVAL
 
